@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Be My Valentine 💘</title>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+:root {
+  --pink1:#ffd6ea;
+  --pink2:#ffeef7;
+  --hot:#ff4d88;
+  --hot2:#ff2f73;
+  --card:#ffffffdd;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin:0;
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at top, var(--pink2), var(--pink1));
+  font-family: "Comic Sans MS", system-ui, sans-serif;
+  overflow:hidden;
+}
+
+#confettiCanvas {
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:10;
+}
+
+.card {
+  width:min(720px,94vw);
+  padding:26px;
+  background:var(--card);
+  backdrop-filter: blur(14px);
+  border-radius:26px;
+  text-align:center;
+  box-shadow:0 25px 80px rgba(0,0,0,.18);
+  position:relative;
+  z-index:2;
+}
+
+.art {
+  width:240px;
+  margin:auto;
+  animation:bob 2.6s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-10px); }
+}
+
+h1 {
+  font-size:clamp(26px,4vw,42px);
+  margin:16px 0;
+}
+
+.button-zone {
+  position:relative;
+  width:min(520px,100%);
+  height:160px;
+  margin:auto;
+}
+
+button {
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  padding:18px 30px;
+  font-size:18px;
+  font-weight:900;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(0,0,0,.18);
+  transition:.15s;
+}
+
+#yesBtn {
+  left:18%;
+  background:linear-gradient(135deg,var(--hot),var(--hot2));
+  color:white;
+  animation:pulse 1.4s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { transform:translateY(-50%) scale(1); }
+  50% { transform:translateY(-50%) scale(1.05); }
+}
+
+#noBtn {
+  left:62%;
+  background:#e5e7eb;
+}
+
+.hint {
+  font-size:13px;
+  opacity:.7;
+}
+
+.result {
+  display:none;
+  animation:pop .4s ease;
+}
+
+@keyframes pop {
+  from { transform:scale(.8); opacity:0; }
+  to { transform:scale(1); opacity:1; }
+}
+
+.fireworks {
+  width:min(380px,90vw);
+}
+</style>
+</head>
+
+<body>
+<canvas id="confettiCanvas"></canvas>
+
+<main class="card">
+<svg class="art" viewBox="0 0 320 240">
+  <defs>
+    <linearGradient id="fur" x1="0" x2="1">
+      <stop offset="0" stop-color="#f7c7a1"/>
+      <stop offset="1" stop-color="#f2a97b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- heart -->
+  <path d="M230 40 C230 22 250 18 260 30
+           C270 18 290 22 290 40
+           C290 64 260 76 260 92
+           C260 76 230 64 230 40Z"
+        fill="#ff4d88"/>
+
+  <!-- body -->
+  <path d="M90 120 C90 70 140 40 190 60
+           C240 40 290 70 290 120
+           C290 180 240 210 190 210
+           C140 210 90 180 90 120Z"
+        fill="url(#fur)"/>
+
+  <!-- ears -->
+  <path d="M110 90 L95 50 L145 78 Z" fill="#f2a97b"/>
+  <path d="M270 90 L285 50 L235 78 Z" fill="#f2a97b"/>
+
+  <!-- eyes -->
+  <circle cx="160" cy="130" r="7"/>
+  <circle cx="220" cy="130" r="7"/>
+
+  <!-- blush -->
+  <circle cx="145" cy="148" r="6" fill="#ff8fb5"/>
+  <circle cx="235" cy="148" r="6" fill="#ff8fb5"/>
+</svg>
+
+<h1>Kendall will you be my valentine? 💘</h1>
+
+<section class="button-zone" id="zone">
+  <button id="yesBtn">YES 💖</button>
+  <button id="noBtn">no 😈</button>
+</section>
+
+<div class="hint" id="hint">the “no” button is nervous…</div>
+
+<section class="result" id="result">
+  <h2>YAYYY!!! 🥹💞</h2>
+  <img class="fireworks"
+    src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="Fireworks GIF">
+</section>
+</main>
+
+<script>
+const zone = document.getElementById("zone");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const result = document.getElementById("result");
+const hint = document.getElementById("hint");
+
+const canvas = document.getElementById("confettiCanvas");
+const confettiInstance = confetti.create(canvas,{resize:true});
+
+let yesScale = 1;
+
+function growYes() {
+  yesScale = Math.min(2.4, yesScale + .12);
+  yesBtn.style.transform =
+    `translateY(-50%) scale(${yesScale})`;
+}
+
+function moveNo(x,y) {
+  const z = zone.getBoundingClientRect();
+  const b = noBtn.getBoundingClientRect();
+
+  let dx = (b.left+b.width/2)-x;
+  let dy = (b.top+b.height/2)-y;
+  let mag = Math.hypot(dx,dy)||1;
+  dx/=mag; dy/=mag;
+
+  let l = (b.left-z.left)+dx*160;
+  let t = (b.top-z.top)+dy*160;
+
+  l = Math.max(0,Math.min(z.width-b.width,l));
+  t = Math.max(0,Math.min(z.height-b.height,t));
+
+  noBtn.style.left=l+"px";
+  noBtn.style.top=t+"px";
+  noBtn.style.transform="none";
+
+  growYes();
+  hint.textContent="STOP TRYING 😭";
+}
+
+zone.addEventListener("pointermove",e=>{
+  const b=noBtn.getBoundingClientRect();
+  if(Math.hypot(
+    (b.left+b.width/2)-e.clientX,
+    (b.top+b.height/2)-e.clientY) < 140)
+    moveNo(e.clientX,e.clientY);
+});
+
+// Accessibility: keyboard support for the no button (arrow keys move it away)
+noBtn.setAttribute('aria-label','No button (evasive)');
+noBtn.setAttribute('role','button');
+noBtn.tabIndex = 0;
+
+noBtn.addEventListener('keydown', (e) => {
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    const rect = noBtn.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    let nx = cx, ny = cy;
+    const step = 80;
+    if (e.key === 'ArrowUp') ny -= step;
+    if (e.key === 'ArrowDown') ny += step;
+    if (e.key === 'ArrowLeft') nx -= step;
+    if (e.key === 'ArrowRight') nx += step;
+    moveNo(nx, ny);
+    e.preventDefault();
+  }
+});
+
+// Accessibility: keyboard activation for YES
+yesBtn.setAttribute('aria-label','Yes button');
+yesBtn.addEventListener('keyup', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') yesBtn.click();
+});
+
+yesBtn.onclick=()=>{
+  zone.style.display="none";
+  hint.style.display="none";
+  result.style.display="block";
+
+  const end=Date.now()+1600;
+  (function frame(){
+    confettiInstance({
+      particleCount:12,
+      spread:120,
+      startVelocity:45,
+      origin:{x:Math.random(),y:Math.random()*.4}
+    });
+    if(Date.now()<end) requestAnimationFrame(frame);
+  })();
+};
+</script>
+</body>
+</html>
